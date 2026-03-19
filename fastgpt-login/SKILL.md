@@ -7,6 +7,21 @@ description: Use when you need to connect Codex to FastGPT management operations
 
 Use this skill when the task needs FastGPT admin authentication.
 
+## Recommended order
+
+Use this skill first in any FastGPT admin workflow.
+
+1. Check whether an existing Firefox/Playwright profile already works
+2. Bind that profile to the CLI wrappers
+3. Verify with a harmless admin read call
+4. Only if that fails, fall back to page login
+
+This skill should hand off to:
+
+- `fastgpt-admin` for app and workflow operations
+- `fastgpt-api-key-manager` for app key operations
+- `fastgpt-dataset-manager` for dataset operations
+
 ## Environment
 
 Prefer reusing an existing Firefox/Playwright profile before attempting page login.
@@ -35,10 +50,16 @@ export FGLOGIN="$CODEX_HOME/skills/fastgpt-login/scripts"
 "$FGADMIN/fgcli_json.sh" auth status
 ```
 
-If that succeeds, prefer:
+If that succeeds, immediately bind the known-good profile:
 
 ```bash
 "$FGADMIN/fgcli.sh" config set-firefox-profile "$FASTGPT_FIREFOX_PROFILE"
+```
+
+Then verify with one harmless read:
+
+```bash
+"$FGADMIN/fgcli_json.sh" app list --type workflow
 ```
 
 ## If profile is unavailable
@@ -57,6 +78,14 @@ Priority:
 2. Reuse explicit cookie
 3. Reuse bearer token
 4. Browser login
+
+## What to report back
+
+- Whether admin auth is already valid
+- Which auth path was used: profile / cookie / bearer / browser login
+- Whether the CLI wrappers are now ready for follow-up skills
+
+Do not print raw cookies, bearer tokens, or passwords.
 
 ## Guardrails
 
